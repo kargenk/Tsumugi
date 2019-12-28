@@ -112,9 +112,9 @@ def reweight_distribution(original_distribution, temperature=0.5):
     ----------
     original_distribution : numpy.ndarray, dim=1
         モデルのソフトマックス関数の出力である元の確率分布
-    temperature : float, [0.0, 1.0]
+    temperature : float
         出力分布のエントロピーを定量化する係数，
-        次の文字の選択をどれくらい意外なものにするのかを制御するパラメータ，0.0がgreedy，1.0がランダム
+        次の文字の選択をどれくらい意外なものにするのかを制御するパラメータ，0.0がgreedy，大きいほどランダム
     
     Returns
     ----------
@@ -135,9 +135,9 @@ def sample(preds, temperature=1.0):
     ----------
     preds : numpy.ndarray, dim=1
         モデルのソフトマックス関数の出力である元の確率分布
-    temperature : float, [0.0, 1.0]
+    temperature : float
         出力分布のエントロピーを定量化する係数，
-        次の文字の選択をどれくらい意外なものにするのかを制御するパラメータ，0.0がgreedy，1.0がランダム
+        次の文字の選択をどれくらい意外なものにするのかを制御するパラメータ，0.0がgreedy，大きいほどランダム
     
     Returns
     ----------
