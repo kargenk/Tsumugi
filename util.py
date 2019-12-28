@@ -4,6 +4,7 @@
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
+import numpy as np
 from time import sleep
 import re
 
@@ -16,12 +17,12 @@ def scraping_from_url(url):
     url : str
         uta-netのURL
     
-    returns
+    Returns
     ----------
     soup : object
         スクレイピング結果を格納した，BeautifulSoupオブジェクト
     """
-    sleep(3)  # webサイトに負担をかけないように間隔をあける
+    sleep(1)  # webサイトに負担をかけないように間隔をあける
     
     html = requests.get(url)
     soup = BeautifulSoup(html.content, 'html.parser')
@@ -37,7 +38,7 @@ def create_songs_dataframe(url):
     url : str
         uta-netのURL
     
-    returns
+    Returns
     ----------
     song_df : pd.DataFrame
         楽曲情報のデータフレーム
@@ -83,3 +84,45 @@ def create_songs_dataframe(url):
     songs_df['Lyric'] = lyrics
     
     return songs_df
+
+def remove_fullspace_and_newline(text):
+    """
+    全角スペース(\u3000)と改行(\n)を除去する関数．
+    
+    Parameters
+    ----------
+    text : str
+        前処理を行う前の歌詞
+    
+    Returns
+    ----------
+    text_removed : str
+        全角スペースと改行を除去した歌詞
+    """
+    text_removed = text.replace('\u3000', '')  # 全角スペース(\u3000)の除去
+    text_removed = text_removed.replace('\n', '')      # 改行(\n)の除去
+    
+    return text_removed
+
+def reweight_distribution(original_distribution, tempreture=0.5):
+    """
+    softmax tempreture: 元の確率分布から，新しい確率分布を生成する関数．
+
+    Parameters
+    ----------
+    original_distribution : numpy.ndarray, dim=1
+        モデルのソフトマックス関数の出力である元の確率分布
+    tempreture : float, [0.0, 1.0]
+        出力分布のエントロピーを定量化する係数，
+        次の文字の選択をどれくらい意外なものにするのかを制御するパラメータ，0.0がgreedy，1.0がランダム
+    
+    Returns
+    ----------
+    new_distribution : object
+        元の確率分布から再荷重された新しい確率分布
+    """
+    distribution = np.log(original_distribution) / tempreture
+    distribution = np.exp(distribution)
+    new_distribution = distribution / np.sum(distribution)
+
+    return new_distribution
