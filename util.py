@@ -99,20 +99,20 @@ def remove_fullspace_and_newline(text):
     text_removed : str
         全角スペースと改行を除去した歌詞
     """
-    text_removed = text.replace('\u3000', '')  # 全角スペース(\u3000)の除去
-    text_removed = text_removed.replace('\n', '')      # 改行(\n)の除去
+    text_removed = text.replace('\u3000', '')      # 全角スペース(\u3000)の除去
+    text_removed = text_removed.replace('\n', '')  # 改行(\n)の除去
     
     return text_removed
 
-def reweight_distribution(original_distribution, tempreture=0.5):
+def reweight_distribution(original_distribution, temperature=0.5):
     """
-    softmax tempreture: 元の確率分布から，新しい確率分布を生成する関数．
+    softmax temperature: 元の確率分布から，新しい確率分布を生成する関数．
 
     Parameters
     ----------
     original_distribution : numpy.ndarray, dim=1
         モデルのソフトマックス関数の出力である元の確率分布
-    tempreture : float, [0.0, 1.0]
+    temperature : float, [0.0, 1.0]
         出力分布のエントロピーを定量化する係数，
         次の文字の選択をどれくらい意外なものにするのかを制御するパラメータ，0.0がgreedy，1.0がランダム
     
@@ -121,8 +121,34 @@ def reweight_distribution(original_distribution, tempreture=0.5):
     new_distribution : object
         元の確率分布から再荷重された新しい確率分布
     """
-    distribution = np.log(original_distribution) / tempreture
+    distribution = np.log(original_distribution) / temperature
     distribution = np.exp(distribution)
     new_distribution = distribution / np.sum(distribution)
 
     return new_distribution
+
+def sample(preds, temperature=1.0):
+    """
+    モデルから得られた確率分布を再荷重し，そこから次の単語のインデックスをサンプリングする関数．
+    
+    Parameters
+    ----------
+    preds : numpy.ndarray, dim=1
+        モデルのソフトマックス関数の出力である元の確率分布
+    temperature : float, [0.0, 1.0]
+        出力分布のエントロピーを定量化する係数，
+        次の文字の選択をどれくらい意外なものにするのかを制御するパラメータ，0.0がgreedy，1.0がランダム
+    
+    Returns
+    ----------
+    next_id : int
+        次の単語のインデックス
+    """
+    preds = np.asarray(preds).astype('float64')
+    preds = np.log(preds) / temperature
+    exp_preds = np.exp(preds)
+    preds = exp_preds / np.sum(exp_preds)
+    probas = np.random.multinomial(1, preds, 1)  # 引数は(試行回数，確率分布，サイズ)
+    next_id = np.argmax(probas)
+
+    return next_id
